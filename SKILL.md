@@ -74,6 +74,12 @@ First determine the expected provider ID from a healthy fresh conversation or th
 openai
 ```
 
+Do not map provider IDs to short aliases such as `ai` unless that exact provider exists in the active Codex configuration. A broken SQLite cache can make a thread visible in the sidebar but fail when opened with an error like:
+
+```text
+failed to load configuration: Model provider `ai` not found
+```
+
 Audit before changing anything:
 
 ```sh
@@ -85,6 +91,19 @@ For JSONL, inspect only the first `session_meta` record. If repairing a session,
 
 - first JSONL record: `payload.model_provider`
 - SQLite row: `threads.model_provider`
+
+If the active configuration and healthy fresh threads use `openai`, normalize stale rows in the active state DB too:
+
+```sh
+sqlite3 ~/.codex/state_5.sqlite ".backup ~/.codex/state_5.sqlite.providerfix.bak"
+sqlite3 ~/.codex/state_5.sqlite \
+  "BEGIN IMMEDIATE;
+   UPDATE threads SET model_provider='openai'
+   WHERE model_provider <> 'openai';
+   COMMIT;"
+sqlite3 ~/.codex/state_5.sqlite \
+  "SELECT model_provider,count(*) FROM threads GROUP BY model_provider;"
+```
 
 Keep a per-file backup and verify every edited JSONL file still parses.
 
