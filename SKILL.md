@@ -96,6 +96,7 @@ If a conversation exists in the database but is absent from the expected project
 - first JSONL `session_meta.payload.cwd`
 - paths referenced in user messages, tool calls, and final answers
 - nearby healthy conversations for that project
+- whether the candidate project directory still exists locally
 
 Common failure mode:
 
@@ -107,6 +108,26 @@ actual project = /Users/mac/Codes/lore
 This can hide the thread from `Project > lore` while also making it awkward in the global conversation list.
 
 Only repair `cwd` when evidence is strong. Good evidence includes repeated references to the child project path, final artifacts inside that project, or user confirmation.
+
+## Project vs Conversation Classification
+
+Do not force every broad or stale `cwd` into a project. Some conversations belong in the generic `Conversation` list.
+
+Keep a thread as a generic conversation when:
+
+- It is a Computer Use, browser-control, media-playback, app-install, OS operation, or casual chat task.
+- Its recorded `cwd` is a broad parent such as `/Users/mac/Codes`, but there is no strong repeated child-project evidence.
+- Its recorded `cwd` or candidate project directory no longer exists locally.
+- Mentions of a project path are incidental context rather than the workspace being worked on.
+
+Repair the thread into a project when:
+
+- The current `cwd` is a broad parent or temporary Codex directory.
+- The transcript strongly indicates a specific child project, for example `/Users/mac/Codes/lore`.
+- That child directory still exists locally.
+- The target project matches nearby healthy Desktop threads or user confirmation.
+
+In short: broad Computer Use and stale local directories stay under conversations; existing, evidence-backed project directories get repaired like the `清理 lore 仓库后重克隆` case.
 
 Repair both sources:
 
